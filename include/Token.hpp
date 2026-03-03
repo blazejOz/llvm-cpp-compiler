@@ -15,11 +15,12 @@ enum class TokenType
     NUMBER,
     STRING,
     
-    EOF_TOKEN,
-
     L_PAREN,
     R_PAREN,
-    SEMICOLON
+    SEMICOLON,
+
+    UNKNOWN,
+    EOF_TOKEN
 };
 
 struct Token

@@ -31,17 +31,18 @@ char Lexer::advance()
 
 Token Lexer::getNextToken()
 {
-    char curr = ' ';
-    
-    while(isspace(curr)){
-        curr = advance();
+    //skip white space
+    while(isspace(peek())){
+        advance();
     }
     
+    char curr = peek();
+
+    //Handle Identifiers and Keywords
     if(isalpha(curr)){
         std::string word;
-        word += curr;
-        while(isalnum(curr = advance())){
-            word += curr;
+        while(isalnum(peek())){
+            word += advance();
         }
 
         if(keywords_.contains(word)) return {keywords_[word], word};
@@ -49,5 +50,24 @@ Token Lexer::getNextToken()
         return {TokenType::IDENTIFIER, word};
     }
 
-    return {TokenType::EOF_TOKEN, "\0"};
+    //Handle numbers
+    if (isdigit(curr)) {
+        std::string num;
+        while (isdigit(peek())) {
+            num += advance();
+        }
+        return {TokenType::NUMBER, num};
+    }
+
+    // Handle Single Characters ( ) ;
+    char c = advance();
+    if (c == '(') return {TokenType::L_PAREN, "("};
+    if (c == ')') return {TokenType::R_PAREN, ")"};
+    if (c == ';') return {TokenType::SEMICOLON, ";"};
+
+    
+    if(c == '\0') return {TokenType::EOF_TOKEN, ""};
+
+    // If reached return UNKNOWN
+    return {TokenType::UNKNOWN, std::string(1, c)};
 }
