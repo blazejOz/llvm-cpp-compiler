@@ -18,6 +18,7 @@ llvm_map_components_to_libnames(llvm_libs Core)
 # COMPILER LOGIC LIBRARY
 add_library(compiler_lib
     src/1_lexer/Lexer.cpp
+    src/2_parser/Parser.cpp
 )
 
 target_include_directories(compiler_lib PUBLIC include)
@@ -38,7 +39,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(unit_tests tests/test_lexer.cpp)
+add_executable(unit_tests 
+  tests/test_lexer.cpp
+  tests/test_parser.cpp
+)
 target_link_libraries(unit_tests PRIVATE compiler_lib Catch2::Catch2WithMain)
 
 enable_testing()
