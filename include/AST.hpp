@@ -74,14 +74,14 @@ public:
 /**
  * @brief Binary expression ( + * + /)
  */
-class BiniaryExprAST : public AST
+class BinaryExprAST : public AST
 {
 private:
     TokenType op_;
     std::unique_ptr<AST> lhs_; //LEFT HAND SIDE
     std::unique_ptr<AST> rhs_; //RIGHT HAND SIDE
 public:
-    BiniaryExprAST(TokenType op, std::unique_ptr<AST> l, std::unique_ptr<AST> r);
+    BinaryExprAST(TokenType op, std::unique_ptr<AST> l, std::unique_ptr<AST> r);
     llvm::Value* codegen(llvm::LLVMContext& context, 
                          llvm::IRBuilder<>& builder, 
                          llvm::Module& module) override;

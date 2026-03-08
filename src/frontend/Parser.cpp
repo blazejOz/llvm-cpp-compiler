@@ -75,7 +75,7 @@ std::unique_ptr<AST> Parser::parseExpr()
     while(match(TokenType::ADD) || match(TokenType::SUB)){
         auto op = advance().type; // current operator ADD or SUB
         auto right = parseTerm();
-        left = std::make_unique<BiniaryExprAST>(op, std::move(left), std::move(right));
+        left = std::make_unique<BinaryExprAST>(op, std::move(left), std::move(right));
     }
     return left;
 }
@@ -86,7 +86,7 @@ std::unique_ptr<AST> Parser::parseTerm()
     while(match(TokenType::MUL) || match(TokenType::DIV)){
         auto op = advance().type; // current operator MUL or DIV
         auto right = parsePrimary();
-        left = std::make_unique<BiniaryExprAST>(op, std::move(left), std::move(right));
+        left = std::make_unique<BinaryExprAST>(op, std::move(left), std::move(right));
     }
     return left;
 }

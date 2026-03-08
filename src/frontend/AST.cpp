@@ -10,7 +10,7 @@ VarDeclarationStmtAST::VarDeclarationStmtAST(TokenType vt, const std::string& id
 
 VariableExprAST::VariableExprAST(const std::string& name) : name_{name} {}
 
-BiniaryExprAST::BiniaryExprAST(TokenType op, std::unique_ptr<AST> l, std::unique_ptr<AST> r)
+BinaryExprAST::BinaryExprAST(TokenType op, std::unique_ptr<AST> l, std::unique_ptr<AST> r)
     : op_{op}, lhs_{std::move(l)}, rhs_{std::move(r)} {}
 
 IntegerExprAST::IntegerExprAST(int val) : val_{val} {}
@@ -63,7 +63,7 @@ llvm::Value* VariableExprAST::codegen(llvm::LLVMContext& context,
     return llvm::ConstantInt::get(context, llvm::APInt(32, 0, true)); //TODO
 }
 
-llvm::Value* BiniaryExprAST::codegen(llvm::LLVMContext& context, 
+llvm::Value* BinaryExprAST::codegen(llvm::LLVMContext& context, 
                                      llvm::IRBuilder<>& builder, 
                                      llvm::Module& module) 
 {
@@ -95,7 +95,7 @@ std::string VariableExprAST::toString()
     return name_;
 }
 
-std::string BiniaryExprAST::toString()
+std::string BinaryExprAST::toString()
 {
     return "(" + Token::typeToString(op_) + " " + lhs_->toString() + " " + rhs_->toString() + ")";
 }
