@@ -3,113 +3,137 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <iostream>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Instructions.h>
 #include "Token.hpp"
 
+// Type Aliases for cleaner signatures
 using SymbolTable = std::map<std::string, llvm::AllocaInst*>;
+using Context     = llvm::LLVMContext&;
+using IRBuild     = llvm::IRBuilder<>&;
+using Mod         = llvm::Module&;
 
 /**
- * @brief Base class for all expression nodes
+ * @brief Base class for all Abstract Syntax Tree nodes.
  */
-class AST
-{
+class AST {
 public:
     virtual ~AST() = default;
-    virtual llvm::Value* codegen(llvm::LLVMContext& context, 
-                                 llvm::IRBuilder<>& builder, 
-                                 llvm::Module& module,
+
+    /**
+     * @brief Generates LLVM IR for this node.
+     */
+    virtual llvm::Value* codegen(Context context, IRBuild builder, Mod module, 
                                  SymbolTable& symbolTable) = 0;
 
     /**
-     * @brief Lisp representation for parser tests
+     * @brief Returns a string representation for debugging/testing.
      */
     virtual std::string toString() = 0;
 };
 
+// --- Container Nodes ---
+
 /**
- * @brief Represents a 'print' statement
+ * @brief Represents a function declaration.
  */
-class PrintStmtAST: public AST
-{
+class FunctionAST : public AST {
+private:
+    std::string name_;
+    std::vector<std::pair<TokenType, std::string>> args_; // {Type, Name}
+    TokenType returnType_;
+    std::unique_ptr<BlockAST> body_;
+public:
+    FunctionAST(std::string name, std::vector<std::pair<TokenType, std::string>> args, 
+                TokenType retType, std::unique_ptr<BlockAST> body);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
+    std::string toString() override;
+};
+
+
+/**
+ * @brief Represents a block of code enclosed in braces { ... }
+ */
+class BlockAST : public AST {
+private:
+    std::vector<std::unique_ptr<AST>> statements_;
+public:
+    BlockAST(std::vector<std::unique_ptr<AST>> statements);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
+    std::string toString() override;
+};
+
+
+// --- Statement Nodes ---
+
+class PrintStmtAST : public AST {
 private:
     std::unique_ptr<AST> expression_;
 public:
     PrintStmtAST(std::unique_ptr<AST> expression);
-    llvm::Value* codegen(llvm::LLVMContext& context, 
-                            llvm::IRBuilder<>& builder, 
-                            llvm::Module& module,
-                            SymbolTable& symbolTable) override;
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
     std::string toString() override;
 };
 
-/**
- * @brief Represesnts variable declaration eg. int x = 2 + 2 * 10;
- */
-class VarDeclarationStmtAST: public AST
-{
+class VarDeclarationStmtAST : public AST {
 private:
-    TokenType varType_; // int
+    TokenType varType_;
     std::string identifier_;
     std::unique_ptr<AST> expression_;
-
 public:
-    VarDeclarationStmtAST(TokenType vt, const std::string&, std::unique_ptr<AST> expr);
-    llvm::Value* codegen(llvm::LLVMContext& context, 
-                            llvm::IRBuilder<>& builder, 
-                            llvm::Module& module,
-                            SymbolTable& symbolTable) override;
+    VarDeclarationStmtAST(TokenType vt, std::string id, std::unique_ptr<AST> expr);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
     std::string toString() override;
 };
 
-class VariableExprAST : public AST
-{
+class IfStmtAST : public AST {
+private:
+    std::unique_ptr<AST> condition_;
+    std::unique_ptr<BlockAST> thenBlock_;
+    std::unique_ptr<BlockAST> elseBlock_; // Can be nullptr
+public:
+    IfStmtAST(std::unique_ptr<AST> cond, std::unique_ptr<BlockAST> thenB, std::unique_ptr<BlockAST> elseB);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
+    std::string toString() override;
+};
+
+class ReturnStmtAST : public AST {
+private:
+    std::unique_ptr<AST> expression_;
+public:
+    ReturnStmtAST(std::unique_ptr<AST> expression);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
+    std::string toString() override;
+};
+
+// --- Expression Nodes ---
+
+class BinaryExprAST : public AST {
+private:
+    TokenType op_;
+    std::unique_ptr<AST> lhs_, rhs_;
+public:
+    BinaryExprAST(TokenType op, std::unique_ptr<AST> l, std::unique_ptr<AST> r);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
+    std::string toString() override;
+};
+
+class VariableExprAST : public AST {
 private:
     std::string name_;
 public:
-    VariableExprAST(const std::string& name);
-    llvm::Value* codegen(llvm::LLVMContext& context, 
-                            llvm::IRBuilder<>& builder, 
-                            llvm::Module& module,
-                            SymbolTable& symbolTable) override;
+    VariableExprAST(std::string name);
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
     std::string toString() override;
 };
 
-/**
- * @brief Binary expression ( + * + /)
- */
-class BinaryExprAST : public AST
-{
-private:
-    TokenType op_;
-    std::unique_ptr<AST> lhs_; //LEFT HAND SIDE
-    std::unique_ptr<AST> rhs_; //RIGHT HAND SIDE
-public:
-    BinaryExprAST(TokenType op, std::unique_ptr<AST> l, std::unique_ptr<AST> r);
-    llvm::Value* codegen(llvm::LLVMContext& context, 
-                            llvm::IRBuilder<>& builder, 
-                            llvm::Module& module,
-                            SymbolTable& symbolTable) override;
-    std::string toString() override;
-};
-
-/**
- * @brief Represents a literal integer like '1' or '42'
- */
-class IntegerExprAST : public AST 
-{
+class IntegerExprAST : public AST {
 private:
     int val_;
 public:
     IntegerExprAST(int val);
-    llvm::Value* codegen(llvm::LLVMContext& context, 
-                            llvm::IRBuilder<>& builder, 
-                            llvm::Module& module,
-                            SymbolTable& symbolTable) override;
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
     std::string toString() override;
 };
-
-
-
