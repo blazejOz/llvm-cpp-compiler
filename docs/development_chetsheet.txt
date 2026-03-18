@@ -1,0 +1,35 @@
+
+
+
+BRANCH NAMING CONVENTION (feat/task-name)
+Structure: <type>/<short-description>
+Always lowercase with hyphens
+  feat/      -> New language logic/features  (feat/if-else-support)
+  fix/       -> Bug fixes                    (fix/lexer-peek-logic)
+  refactor/  -> Code cleanup/restructuring   (refactor/ast-nodes)
+  test/      -> Only adding/updating tests   (test/binary-ops)
+  docs/      -> Documentation/Grammar/EBNF   (docs/grammar-v2)
+  chore/     -> Build system/CI/Dependencies (chore/cmake-llvm)
+
+
+CONVENTIONAL COMMITS ("Message")
+Structure: <type>(<scope>): <subject>
+
+Type     | Description                                           
+feat     | A new feature (e.g., adding 'while' loops)            
+fix      | A bug fix (e.g., fixing precedence in math)           
+test     | Adding/fixing tests                                   
+refactor | Internal code change (no behavior change)            
+docs     | Documentation only                                    
+chore    | Build scripts, CI, README updates                     
+
+SCOPES (The Module):
+(lexer), (parser), (ast), (codegen), (jit), (build), (ebnf)
+
+
+THE GOLDEN RULES
+  1. Imperative Mood: Use "add" not "added", "fix" not "fixed".
+  2. Atomic Commits: One commit = One logical change. 
+  3. Scope it: Always use brackets to show what module was touched.
+  4. CI Check: Never merge to main if the tests are RED.
+
