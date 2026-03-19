@@ -22,9 +22,9 @@ int main() {
     Parser parser(tokens);
     auto asts = parser.parse();
 
-    // for (const auto& ast : asts) {
-    //     std::cout << "Parsed Statement: " << ast->toString() << std::endl;
-    // }
+    for (const auto& ast : asts) {
+        std::cout << "Parsed Statement: " << ast->toString() << std::endl;
+    }
 
     // // 3. IR Generation
     // IRGenerator codegen;

@@ -30,9 +30,28 @@ public:
     /** @brief Returns a string representation of the node (Lisp-style) for debugging. */
     virtual std::string toString() = 0;
 };
-class BlockAST;
 
 //Container Nodes
+
+/** @brief Represents a block of code enclosed in braces { ... } */
+class BlockAST : public AST {
+private:
+    std::vector<std::unique_ptr<AST>> statements_;
+public:
+    BlockAST(std::vector<std::unique_ptr<AST>> statements)
+        : statements_(std::move(statements)) {}
+    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
+    std::string toString() override 
+    { 
+        std::string s = "{ ";
+        for (auto& stmt : statements_) {
+            if (stmt) s += stmt->toString() + "; ";
+        }
+        s += "}";
+        return s;  
+    }
+};
+
 
 /** @brief Represents a function definition with arguments and a body. */
 class FunctionAST : public AST {
@@ -46,19 +65,27 @@ public:
                 TokenType retType, std::unique_ptr<BlockAST> body)
         : name_(std::move(name)), args_(std::move(args)), returnType_(retType), body_(std::move(body)) {}
     llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
-    std::string toString() override { return "(function " + name_  + ")";  }
-};
+    std::string toString() override 
+    { 
+        std::string s = "(fn " + name_ + " [";
 
+        for (size_t i = 0; i < args_.size(); i++) {
+            s += Token::typeToString(args_[i].first) + " " + args_[i].second;
+            if (i < args_.size() - 1) s += ", ";
+        }
 
-/** @brief Represents a block of code enclosed in braces { ... } */
-class BlockAST : public AST {
-private:
-    std::vector<std::unique_ptr<AST>> statements_;
-public:
-    BlockAST(std::vector<std::unique_ptr<AST>> statements)
-        : statements_(std::move(statements)) {}
-    llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
-    std::string toString() override { return "{ " + statements_[0]->toString() + "}";  }
+        s += "]: " + Token::typeToString(returnType_) + " ";
+        
+        if (body_) {
+            s += body_->toString(); 
+        } else {
+            s += "{ <empty> }";
+        }
+        
+        s += ")";
+
+        return s; 
+    }
 };
 
 
@@ -112,7 +139,13 @@ public:
     IfStmtAST(std::unique_ptr<AST> cond, std::unique_ptr<BlockAST> thenB, std::unique_ptr<BlockAST> elseB)
         : condition_(std::move(cond)), thenBlock_(std::move(thenB)), elseBlock_(std::move(elseB)) {}
     llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
-    std::string toString() override { return "(if " + condition_->toString() + ")"; }
+    std::string toString() override 
+    { 
+        std::string s = "(if " + condition_->toString() + thenBlock_->toString();
+        if (elseBlock_) s += elseBlock_->toString(); 
+        s += ")";
+        return s; 
+    }
 };
 
 /** @brief Represents a while loop: while (condition) { body } */
@@ -124,7 +157,12 @@ public:
     WhileStmtAST(std::unique_ptr<AST> cond, std::unique_ptr<BlockAST> body)
         : condition_(std::move(cond)), body_(std::move(body)) {}
     llvm::Value* codegen(Context context, IRBuild builder, Mod module, SymbolTable& symbolTable) override;
-    std::string toString() override { return "(while " + condition_->toString() + ")"; }
+    std::string toString() override 
+    { 
+        std::string s = "(while " + condition_->toString() + body_->toString();
+        s += ")";
+        return s; 
+    }
 };
 
 /** @brief Represents a return statement. */
