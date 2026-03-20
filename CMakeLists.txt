@@ -26,7 +26,7 @@ llvm_map_components_to_libnames(llvm_libs
 add_library(compiler_lib
     src/frontend/Lexer.cpp
     src/frontend/Parser.cpp
-    src/codegen/IR_Generator.cpp
+    src/frontend/IR_Generator.cpp
     src/backend/JITengine.cpp
 )
 

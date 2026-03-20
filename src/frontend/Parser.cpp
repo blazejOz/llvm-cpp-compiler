@@ -245,6 +245,7 @@ std::unique_ptr<AST> Parser::parseFunctionCall()
     expect(TokenType::L_PAREN);
     auto args = parseArgs();
     expect(TokenType::R_PAREN);
+    expect(TokenType::SEMICOLON);
     return std::make_unique<CallExprAST>(callee, std::move(args));
 }
 
