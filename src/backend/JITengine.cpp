@@ -1,37 +1,42 @@
 #include "JITengine.hpp"
 
-JITengine::JITengine() {
-    // init target machine CPU drivers 
+/**
+ * @brief run jit from irCodes represented in a string
+ * based on https://llvm.org/docs/ORCv2.html documentation
+ */
+void JITengine::runFromIRString(const std::string& irCode)
+{
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
-}
+    llvm::ExitOnError ExitOnErr;
 
-void JITengine::runModule(std::unique_ptr<llvm::Module> module) {
-    std::string error;
+    auto JIT = ExitOnErr(llvm::orc::LLJITBuilder().create());
 
-    //build engine
-    engine_.reset(llvm::EngineBuilder(std::move(module))
-        .setErrorStr(&error)
-        .setEngineKind(llvm::EngineKind::JIT)
-        .create());
+    // add libc library to jit
+    JIT->getMainJITDylib().addGenerator(
+        ExitOnErr(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(
+            JIT->getDataLayout().getGlobalPrefix()))
+    );
 
-    if (!engine_) {
-        std::cerr << "JIT Error: " << error << std::endl;
+    //parse irCode string into module for jit
+    auto ctx = std::make_unique<llvm::LLVMContext>();
+    llvm::SMDiagnostic err;
+    auto buffer = llvm::MemoryBuffer::getMemBuffer(irCode);
+    auto mod = llvm::parseIR(*buffer, err, *ctx);
+
+    if (!mod) {
+        err.print("JIT_Error", llvm::errs());
         return;
     }
 
-    // find main in 
-    uint64_t addr = engine_->getFunctionAddress("main");
+    // add module
+    ExitOnErr(JIT->addIRModule(llvm::orc::ThreadSafeModule(std::move(mod), std::move(ctx))));
 
-    if (addr == 0) {
-        std::cerr << "JIT Error: Could not find main function address." << std::endl;
-        return;
-    }
-    //i dont know... it wokrs...
-    int (*compiledMain)() = (int (*)())addr;
-    
-    std::cout << "### Starting JIT" << std::endl;
-    compiledMain(); 
-    std::cout << "### JIT Finished" << std::endl;
+    //find main and RUN IT
+    auto mainSym = ExitOnErr(JIT->lookup("main"));
+    auto mainFn = mainSym.toPtr<int(*)()>();
+
+    std::cout << "--- JIT START ---" << std::endl;
+    mainFn(); 
+    std::cout << "--- JIT END ---" << std::endl;
 }

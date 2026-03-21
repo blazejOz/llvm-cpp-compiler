@@ -5,7 +5,26 @@
 
 int main() {
     // 1. Lexing
-    Lexer lexer("int x = 2 + 2 * 2; print(x); print(4 + 2 * 7 + 10);");
+    Lexer lexer(R"(
+
+            fn tryWhile(int a): void
+            {
+                int i = a; 
+                while(i > 0){
+                    print(i);
+                    i = i - 1;
+                }
+            }     
+
+            fn main(): int
+            {
+                int x = 3;
+                tryWhile(x);
+                return 0;
+            }
+
+        )");
+
     auto tokens = lexer.tokenize();
 
     // 2. Parsing
@@ -21,10 +40,10 @@ int main() {
     codegen.generate(asts);
     codegen.print();
 
-    
+    std::string irCodes = codegen.getIRString();
 
     JITengine engine;
-    engine.runModule(codegen.moveModule());
+    engine.runFromIRString(irCodes);
     
 
     return 0;
