@@ -1,8 +1,11 @@
 #pragma once
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
+#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
 #include <llvm/Support/TargetSelect.h>
-#include <llvm/ExecutionEngine/MCJIT.h>
-#include <llvm/IR/Module.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/MemoryBuffer.h>
 #include <iostream>
 
 /** @brief Simple Just-In-Time compiler wrapper using LLVM JITengine.
@@ -11,11 +14,9 @@
 class JITengine
 {
 private:
-    std::unique_ptr<llvm::ExecutionEngine> engine_;
 
 public:
-    JITengine();
+    JITengine(){}
 
-    /** @brief Takes ownership of an LLVM module and executes its 'main' function. */
-    void runModule(std::unique_ptr<llvm::Module> module);
+    void runFromIRString(const std::string& irCode);
 };

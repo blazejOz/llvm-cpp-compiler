@@ -7,19 +7,19 @@ int main() {
     // 1. Lexing
     Lexer lexer(R"(
 
-            fn printNum(int a): void
+            fn tryWhile(int a): void
             {
-                print(a);
-            }   
-            fn add(int a, int b): int
-            {
-                return a + b;
-            }   
+                int i = a; 
+                while(i > 0){
+                    print(i);
+                    i = i - 1;
+                }
+            }     
 
             fn main(): int
             {
-                int x = 2 + 2 * 2;
-                print(x);
+                int x = 3;
+                tryWhile(x);
                 return 0;
             }
 
@@ -40,10 +40,10 @@ int main() {
     codegen.generate(asts);
     codegen.print();
 
-    
+    std::string irCodes = codegen.getIRString();
 
-    // JITengine engine;
-    // engine.runModule(codegen.moveModule());
+    JITengine engine;
+    engine.runFromIRString(irCodes);
     
 
     return 0;

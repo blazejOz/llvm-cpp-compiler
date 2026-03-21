@@ -15,6 +15,7 @@ private:
     std::unique_ptr<llvm::Module> module;                   //
     std::map<std::string, llvm::Value *> namedValues;       //
 
+    std::unique_ptr<llvm::LLVMContext> context_ptr;
 public:
     IRGenerator() : 
         context(),
@@ -27,12 +28,14 @@ public:
     
     /** @brief Print IR code */
     void print() const { module->print(llvm::outs(), nullptr); }
+
+    /** @brief generete and return IR codes as string
+     *  @return string of IR */
+    std::string getIRString() const;
     
     /** @brief LLVM modlue getter
      *  @return llvm::Module */
-    std::unique_ptr<llvm::Module> moveModule() {
-        return std::move(module);
-    }
+    std::unique_ptr<llvm::Module> moveModule() { return std::move(module); }
 };
 
 

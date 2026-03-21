@@ -1,10 +1,19 @@
 #include "IR_Generator.hpp"
 
-void IRGenerator::generate(const std::vector<std::unique_ptr<AST>>& nodes) {
+void IRGenerator::generate(const std::vector<std::unique_ptr<AST>>& nodes) 
+{
     // loop parser nodes
     for (const auto& node : nodes) {
         node->codegen(context, builder, *module, namedValues);
     }
+}
+
+std::string IRGenerator::getIRString() const
+{
+    std::string ir;
+    llvm::raw_string_ostream os(ir);
+    module->print(os, nullptr);
+    return ir;
 }
 
 
@@ -40,7 +49,7 @@ llvm::Value* FunctionAST::codegen(Context context, IRBuild builder, Mod module, 
     }
 
     // check Return and add one if missing
-    if (!BasicBlock->getTerminator()) {
+    if (!builder.GetInsertBlock()->getTerminator()) {
         if (returnType_ == TokenType::VOID_KEYWORD)
             builder.CreateRetVoid();
         else
