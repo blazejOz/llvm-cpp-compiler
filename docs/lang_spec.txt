@@ -1,0 +1,138 @@
+===============================================================================
+                         TOYLANG LANGUAGE SPECIFICATION
+                                  Version 1.0
+===============================================================================
+
+1. OVERVIEW
+-----------
+Toylang is a strictly-typed, imperative, expression-oriented language 
+designed for ahead-of-time (AOT) compilation via the LLVM infrastructure. 
+It prioritizes clarity, structural simplicity, and direct mapping to 
+LLVM Intermediate Representation.
+
+2. TYPE SYSTEM
+--------------
+Toylang currently supports the following primitive types:
+  - int    : 64-bit signed integer (maps to LLVM i64)
+  - void   : Represents the absence of a value (used for function returns)
+
+3. SYNTAX & GRAMMAR (EBNF)
+--------------------------
+<program>    ::= <function>*
+<function>   ::= "fn" <id> "(" [ <params> ] ")" ":" <type> "{" <block> "}"
+<params>     ::= <id> ":" <type> { "," <id> ":" <type> }
+<type>       ::= "int" | "void"
+<block>      ::= { <statement> }
+<statement>  ::= <var_decl> | <assignment> | <if_stmt> | <while_stmt> 
+                 | <return_stmt> | <expr_stmt>
+
+<var_decl>    ::= <type> <id> "=" <expression> ";"
+<assignment>  ::= <id> "=" <expression> ";"
+<if_stmt>     ::= "if" "(" <expression> ")" "{" <block> "}" [ "else" "{" <block> "}" ]
+<while_stmt>  ::= "while" "(" <expression> ")" "{" <block> "}"
+<return_stmt> ::= "return" <expression> ";"
+
+4. EXPRESSIONS & OPERATORS
+--------------------------
+Toylang supports standard algebraic precedence.
+  - Arithmetic:  + , - , * , /
+  - Relational:  < , > , == , !=
+  - Logical:     (0 is false, non-zero is true)
+
+5. BUILT-IN FUNCTIONS
+---------------------
+The language provides intrinsic access to system-level I/O:
+  - print(int) : Outputs the integer value to stdout followed by a newline.
+
+6. MEMORY MODEL
+---------------
+  - All variables are stack-allocated by default via LLVM 'alloca' instructions.
+  - Variables follow lexical scoping within curly braces {}.
+
+7. EXAMPLE CODE
+---------------
+    fn factorial(n: int): int {
+        int res = 1;
+        while (n > 1) {
+            res = res * n;
+            n = n - 1;
+        }
+        return res;
+    }
+
+    fn main(): int {
+        int val = factorial(5);
+        print(val);
+        return 0;
+    }
+
+===============================================================================
+EOF===============================================================================
+                         TOYLANG LANGUAGE SPECIFICATION
+                                  Version 1.0
+===============================================================================
+
+1. OVERVIEW
+-----------
+Toylang is a strictly-typed, imperative, expression-oriented language 
+designed for ahead-of-time (AOT) compilation via the LLVM infrastructure. 
+It prioritizes clarity, structural simplicity, and direct mapping to 
+LLVM Intermediate Representation.
+
+2. TYPE SYSTEM
+--------------
+Toylang currently supports the following primitive types:
+  - int    : 64-bit signed integer (maps to LLVM i64)
+  - void   : Represents the absence of a value (used for function returns)
+
+3. SYNTAX & GRAMMAR (EBNF)
+--------------------------
+<program>    ::= <function>*
+<function>   ::= "fn" <id> "(" [ <params> ] ")" ":" <type> "{" <block> "}"
+<params>     ::= <id> ":" <type> { "," <id> ":" <type> }
+<type>       ::= "int" | "void"
+<block>      ::= { <statement> }
+<statement>  ::= <var_decl> | <assignment> | <if_stmt> | <while_stmt> 
+                 | <return_stmt> | <expr_stmt>
+
+<var_decl>    ::= <type> <id> "=" <expression> ";"
+<assignment>  ::= <id> "=" <expression> ";"
+<if_stmt>     ::= "if" "(" <expression> ")" "{" <block> "}" [ "else" "{" <block> "}" ]
+<while_stmt>  ::= "while" "(" <expression> ")" "{" <block> "}"
+<return_stmt> ::= "return" <expression> ";"
+
+4. EXPRESSIONS & OPERATORS
+--------------------------
+Toylang supports standard algebraic precedence.
+  - Arithmetic:  + , - , * , /
+  - Relational:  < , > , == , !=
+  - Logical:     (0 is false, non-zero is true)
+
+5. BUILT-IN FUNCTIONS
+---------------------
+The language provides intrinsic access to system-level I/O:
+  - print(int) : Outputs the integer value to stdout followed by a newline.
+
+6. MEMORY MODEL
+---------------
+  - All variables are stack-allocated by default via LLVM 'alloca' instructions.
+  - Variables follow lexical scoping within curly braces {}.
+
+7. EXAMPLE CODE
+---------------
+    fn factorial(n: int): int {
+        int res = 1;
+        while (n > 1) {
+            res = res * n;
+            n = n - 1;
+        }
+        return res;
+    }
+
+    fn main(): int {
+        int val = factorial(5);
+        print(val);
+        return 0;
+    }
+
+===============================================================================

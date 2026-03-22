@@ -1,62 +1,101 @@
-# llvm-cpp-compiler
+# ToyLang Compiler
+
 [![CI](https://github.com/blazejOz/llvm-cpp-compiler/actions/workflows/pipeline.yml/badge.svg)](https://github.com/blazejOz/llvm-cpp-compiler/actions)
 
-A small learning project: a simple C++ compiler frontend aimed at learning LLVM by building a minimal, opinionated compiler.
+A learning compiler project implemented in C++20 and built atop LLVM 21.
+It demonstrates an end-to-end pipeline for a small custom language (inspired by LLVM Kaleidoscope) in an object-oriented style.
 
-Status
-------
+Reference: https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/index.html
 
-In progress — currently provides an OOP skeleton for the frontend and a working translation for a `print` statement to the IR. The project is educational and evolving.
 
-Goals
------
+<p align="center">
+  <img src="assets/demo.gif" width="900px" alt="Compiler Demo">
+</p>
 
-- Learn the LLVM toolchain and IR generation.
-- Implement a small language frontend (lexer, parser, AST).
-- Generate LLVM IR and explore code generation optimizations.
+## Language Specification
 
-Quick build & run
----------------
+- [docs/lang_spec.txt](docs/lang_spec.txt)
 
-Requires CMake and a C++ toolchain. From the repository root:
+## Architecture Overview
+
+The compiler follows a classical 3-phase architecture:
+
+1. Frontend
+   - Lexer: hand-written scanner and tokenizer.
+   - Parser: recursive descent parser constructs an AST.
+
+2. Middle-end (IR Generation)
+   - Transforms AST to LLVM IR.
+   - Manages variable scope, symbol tables, and functions.
+
+3. Backend
+   - JIT Engine (LLVM ORCv2) for immediate execution.
+   - Object emitter (platform target triple + CPU features) for .o output.
+   - Linker integration using the system `cc` for executables.
+
+## Requirements
+
+- LLVM 21+
+- C++20 toolchain
+- CMake
+
+## Quick Build & Run
+
+From repository root:
 
 ```bash
 cmake -B build
 cmake --build build
-./build/compiler
 ```
 
-Binaries and tests are produced in the `build` folder (for example, `build/compiler` and `build/unit_tests`).
+Run with JIT (default mode):
 
-Project layout
---------------
+```bash
+./build/compiler example.toy -jit
+```
 
-- Source:
-  - [src/main.cpp](src/main.cpp)
-  - [src/frontend/Lexer.cpp](src/frontend/Lexer.cpp)
-  - [src/frontend/Parser.cpp](src/frontend/Parser.cpp)
-  - [src/frontend/AST.cpp](src/frontend/AST.cpp)
-  - [src/codegen/IR_Generator.cpp](src/codegen/IR_Generator.cpp)
-- Public headers: [include/](include/)
-  - [include/AST.hpp](include/AST.hpp)
-  - [include/Lexer.hpp](include/Lexer.hpp)
-  - [include/Parser.hpp](include/Parser.hpp)
-  - [include/IR_Generator.hpp](include/IR_Generator.hpp)
-- Tests: [tests/](tests/) (Catch2 based unit tests)
+Generate LLVM IR (assembly):
 
-Current features
-----------------
+```bash
+./build/compiler example.toy -S
+```
 
-- Object-oriented skeleton for the compiler frontend.
-- Basic lexer and parser scaffolding.
-- Translation of a `print` statement into the project's IR generator.
+Compile to native binary:
 
-Notes
------
+```bash
+./build/compiler example.toy -o my_app
+./my_app
+```
 
-This repository is intended as a learning exercise. Expect frequent changes and refactors as ideas are explored.
+## Project Layout
 
-License
--------
+- `src/`
+  - `main.cpp`
+  - `frontend/Lexer.cpp`
+  - `frontend/Parser.cpp`
+  - `frontend/IR_Generator.cpp`
+  - backend sources in `src/backend/`
+- `include/`
+  - `AST.hpp`
+  - `Lexer.hpp`
+  - `Parser.hpp`
+  - `IR_Generator.hpp`
+- `tests/` (Catch2 unit tests)
+- `docs/` (language spec, compiler design notes)
 
-See the project `LICENSE` file.
+## Current Features
+
+- `if` / `else` / `while`
+- integer variable declaration and assignment
+- function definitions and calls
+- LLVM IR generation (`-S`)
+- JIT execution (`-jit`)
+- native object emission / executable generation
+
+## Notes
+
+This repository is intended for learning and experimentation. APIs and implementation details may change frequently.
+
+## License
+
+See `LICENSE`.
