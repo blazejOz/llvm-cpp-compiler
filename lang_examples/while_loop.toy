@@ -1,0 +1,15 @@
+fn tryWhile(int a): void
+{
+    int i = a;
+    while(i > 0){
+        print(i);
+        i = i - 1;
+    }
+}
+
+fn main():int
+{
+    int a = 1 + 2;
+    tryWhile(a);
+    return 0;
+}
