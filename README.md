@@ -12,6 +12,16 @@ Reference: https://llvm.org/docs/tutorial/MyFirstLanguageFrontend/index.html
   <img src="assets/demo.gif" width="900px" alt="Compiler Demo">
 </p>
 
+## Try it with Docker
+You can run the compiler without installing LLVM locally:
+```bash
+# Pull the image
+docker pull ghcr.io/blazejoz/toylang-compiler:latest
+
+# Run on your local file
+docker run --rm -v $(pwd):/app ghcr.io/blazejoz/toylang-compiler:latest <your_file>.toy 
+```
+
 ## Language Specification
 
 - [docs/lang_spec.txt](docs/lang_spec.txt)
@@ -32,6 +42,22 @@ The compiler follows a classical 3-phase architecture:
    - JIT Engine (LLVM ORCv2) for immediate execution.
    - Object emitter (platform target triple + CPU features) for .o output.
    - Linker integration using the system `cc` for executables.
+  
+<details>
+<summary><b>View Project Structure</b></summary>
+
+```text
+├── include/            # Headers (AST nodes, Parser, Lexer interfaces)
+├── src/
+│   ├── frontend/       # Lexer.cpp, Parser.cpp
+│   ├── middleend/      # IR_Generator.cpp (AST -> LLVM IR)
+│   ├── backend/        # JIT Engine & Object Emitter
+│   └── main.cpp        # Compiler driver & CLI handling
+├── tests/              # Unit tests (Catch2)
+├── docs/               # Language specification
+└── CMakeLists.txt
+```
+</details>
 
 ## Requirements
 
@@ -51,37 +77,22 @@ cmake --build build
 Run with JIT (default mode):
 
 ```bash
-./build/compiler example.toy -jit
+./build/compiler lang_examples/example.toy -jit
 ```
 
 Generate LLVM IR (assembly):
 
 ```bash
-./build/compiler example.toy -S
+./build/compiler lang_examples/example.toy -S
 ```
 
 Compile to native binary:
 
 ```bash
-./build/compiler example.toy -o my_app
+./build/compiler lang_examples/example.toy -o my_app
 ./my_app
 ```
 
-## Project Layout
-
-- `src/`
-  - `main.cpp`
-  - `frontend/Lexer.cpp`
-  - `frontend/Parser.cpp`
-  - `frontend/IR_Generator.cpp`
-  - backend sources in `src/backend/`
-- `include/`
-  - `AST.hpp`
-  - `Lexer.hpp`
-  - `Parser.hpp`
-  - `IR_Generator.hpp`
-- `tests/` (Catch2 unit tests)
-- `docs/` (language spec, compiler design notes)
 
 ## Current Features
 
@@ -91,6 +102,32 @@ Compile to native binary:
 - LLVM IR generation (`-S`)
 - JIT execution (`-jit`)
 - native object emission / executable generation
+
+## Roadmap & Planned Features
+
+Phase 1: Core Control Flow & Logic
+- [x] Function Definitions: Support for multiple arguments and return types.
+- [x] AOT Compilation: Native .o emission and linking via clang/cc.
+- [x] Standard Flow: if-else branching and while loops.
+- [ ] For Loops: Implementation of C-style for(init; cond; step) sugar.
+- [ ] Logical Operators: Short-circuiting && and ||.
+
+Memory & Data Structures
+- [ ] Arrays: Fixed-size stack arrays with bounds checking.
+- [ ] Structs (User Defined Types): Implementing GetElementPtr (GEP) for member access.
+- [ ] Global Variables: Support for state that persists across function calls.
+- [ ] Strings: Basic char* support and integration with printf.
+
+Middle-end & LLVM Optimizations
+- [ ] SSA Infrastructure: Proper use of Phi nodes for control flow merging (moving away from "everything is a variable").
+- [ ] Mem2Reg Pass: Promoting stack-allocated variables to LLVM registers to enable cleaner IR.
+- [ ] Optimization Pipeline: Integrating PassBuilder to run Constant Folding and Dead Code Elimination (DCE).
+- [ ] CFG Visualization: Exporting Control Flow Graphs to .dot files for debugging.
+
+Developer Experience & Quality
+- [ ] Better Error Reporting: Tracking line/column numbers in the Lexer for "Clang-style" error messages.
+- [ ] Standard Library: A small stdlib.toy for math and basic I/O.
+- [ ] Dockerized Toolchain: Full AOT pipeline available via a single Docker image.
 
 ## Notes
 
