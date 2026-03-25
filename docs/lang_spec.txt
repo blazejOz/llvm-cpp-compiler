@@ -1,122 +1,59 @@
 ===============================================================================
-                         TOYLANG LANGUAGE SPECIFICATION
-                                  Version 1.0
+                        TOYLANG LANGUAGE SPECIFICATION
+                                 Version 1.1
 ===============================================================================
 
 1. OVERVIEW
 -----------
 Toylang is a strictly-typed, imperative, expression-oriented language 
 designed for ahead-of-time (AOT) compilation via the LLVM infrastructure. 
-It prioritizes clarity, structural simplicity, and direct mapping to 
-LLVM Intermediate Representation.
 
 2. TYPE SYSTEM
 --------------
-Toylang currently supports the following primitive types:
-  - int    : 64-bit signed integer (maps to LLVM i64)
-  - void   : Represents the absence of a value (used for function returns)
+| Type   | LLVM Mapping | Description                          |
+|--------|--------------|--------------------------------------|
+| int    | i64          | 64-bit signed two's complement integer|
+| void   | void         | Return type for side-effect functions |
 
-3. SYNTAX & GRAMMAR (EBNF)
+3. LEXICAL STRUCTURE
+--------------------
+- Keywords:   fn, int, void, if, else, while, return, print
+- Identifiers: [a-zA-Z][a-zA-Z0-9_]*
+- Literals:   [0-9]+ (Base 10 Integers)
+- Comments:   // Single-line only
+
+4. OPERATOR PRECEDENCE
+----------------------
+(From highest to lowest)
+1. Parentheses: ( )
+2. Multiplicative: * , /
+3. Additive: + , -
+4. Relational: < , > , <= , >= , == , !=
+
+5. SYNTAX & GRAMMAR (EBNF)
 --------------------------
-<program>    ::= <function>*
-<function>   ::= "fn" <id> "(" [ <params> ] ")" ":" <type> "{" <block> "}"
-<params>     ::= <id> ":" <type> { "," <id> ":" <type> }
-<type>       ::= "int" | "void"
-<block>      ::= { <statement> }
-<statement>  ::= <var_decl> | <assignment> | <if_stmt> | <while_stmt> 
+<program>      ::= <function>*
+<function>     ::= "fn" <id> "(" [ <params> ] ")" ":" <type> "{" <block> "}"
+<params>       ::= <id> ":" <type> { "," <id> ":" <type> }
+<block>        ::= { <statement> }
+<statement>    ::= <var_decl> | <assignment> | <if_stmt> | <while_stmt> 
                  | <return_stmt> | <expr_stmt>
 
-<var_decl>    ::= <type> <id> "=" <expression> ";"
-<assignment>  ::= <id> "=" <expression> ";"
-<if_stmt>     ::= "if" "(" <expression> ")" "{" <block> "}" [ "else" "{" <block> "}" ]
-<while_stmt>  ::= "while" "(" <expression> ")" "{" <block> "}"
-<return_stmt> ::= "return" <expression> ";"
+<var_decl>     ::= <type> <id> "=" <expression> ";"
+<assignment>   ::= <id> "=" <expression> ";"
+<if_stmt>      ::= "if" "(" <expression> ")" <block> [ "else" <block> ]
+<while_stmt>   ::= "while" "(" <expression> ")" <block>
+<return_stmt>  ::= "return" <expression> ";"
+<expr_stmt>    ::= <expression> ";"
 
-4. EXPRESSIONS & OPERATORS
---------------------------
-Toylang supports standard algebraic precedence.
-  - Arithmetic:  + , - , * , /
-  - Relational:  < , > , == , !=
-  - Logical:     (0 is false, non-zero is true)
-
-5. BUILT-IN FUNCTIONS
----------------------
-The language provides intrinsic access to system-level I/O:
-  - print(int) : Outputs the integer value to stdout followed by a newline.
-
-6. MEMORY MODEL
----------------
-  - All variables are stack-allocated by default via LLVM 'alloca' instructions.
-  - Variables follow lexical scoping within curly braces {}.
-
-7. EXAMPLE CODE
----------------
-    fn factorial(n: int): int {
-        int res = 1;
-        while (n > 1) {
-            res = res * n;
-            n = n - 1;
-        }
-        return res;
-    }
-
-    fn main(): int {
-        int val = factorial(5);
-        print(val);
-        return 0;
-    }
-
-===============================================================================
-EOF===============================================================================
-                         TOYLANG LANGUAGE SPECIFICATION
-                                  Version 1.0
-===============================================================================
-
-1. OVERVIEW
------------
-Toylang is a strictly-typed, imperative, expression-oriented language 
-designed for ahead-of-time (AOT) compilation via the LLVM infrastructure. 
-It prioritizes clarity, structural simplicity, and direct mapping to 
-LLVM Intermediate Representation.
-
-2. TYPE SYSTEM
---------------
-Toylang currently supports the following primitive types:
-  - int    : 64-bit signed integer (maps to LLVM i64)
-  - void   : Represents the absence of a value (used for function returns)
-
-3. SYNTAX & GRAMMAR (EBNF)
---------------------------
-<program>    ::= <function>*
-<function>   ::= "fn" <id> "(" [ <params> ] ")" ":" <type> "{" <block> "}"
-<params>     ::= <id> ":" <type> { "," <id> ":" <type> }
-<type>       ::= "int" | "void"
-<block>      ::= { <statement> }
-<statement>  ::= <var_decl> | <assignment> | <if_stmt> | <while_stmt> 
-                 | <return_stmt> | <expr_stmt>
-
-<var_decl>    ::= <type> <id> "=" <expression> ";"
-<assignment>  ::= <id> "=" <expression> ";"
-<if_stmt>     ::= "if" "(" <expression> ")" "{" <block> "}" [ "else" "{" <block> "}" ]
-<while_stmt>  ::= "while" "(" <expression> ")" "{" <block> "}"
-<return_stmt> ::= "return" <expression> ";"
-
-4. EXPRESSIONS & OPERATORS
---------------------------
-Toylang supports standard algebraic precedence.
-  - Arithmetic:  + , - , * , /
-  - Relational:  < , > , == , !=
-  - Logical:     (0 is false, non-zero is true)
-
-5. BUILT-IN FUNCTIONS
----------------------
-The language provides intrinsic access to system-level I/O:
-  - print(int) : Outputs the integer value to stdout followed by a newline.
-
-6. MEMORY MODEL
----------------
-  - All variables are stack-allocated by default via LLVM 'alloca' instructions.
-  - Variables follow lexical scoping within curly braces {}.
+6. SEMANTICS
+------------
+- Scoping: Toylang uses strict lexical scoping. Variables declared in a 
+  block are not visible outside that block.
+- Entry Point: Execution begins at the function named 'main', which 
+  must return an 'int'.
+- Boolean Logic: Toylang treats 0 as false and any non-zero value as true 
+  for conditional statements.
 
 7. EXAMPLE CODE
 ---------------
